@@ -28,8 +28,8 @@ Technical Architecture
 
 - Edge Layer: Raw sensor data collection (PM2.5, CO2, Temperature, Voltage, etc.)
 - Fog Layer: Local data processing, threshold alerting, and device coordination for low-latency operations.
-- **Cloud Layer: Centralized data storage with APIs to serve the web dashboard.
-- **Dashboard: Real-time display of environmental metrics via interactive graphs and dynamic maps.
+- Cloud Layer: Centralized data storage with APIs to serve the web dashboard.
+- Dashboard: Real-time display of environmental metrics via interactive graphs and dynamic maps.
 
 
  Technology Stack
