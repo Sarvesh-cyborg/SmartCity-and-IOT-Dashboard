@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-
-    <!-- Swal for alerts -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Dexie for historical data -->
-<script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
-
-<!-- Google Maps API -->
-<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&callback=initMap"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart City Dashboard</title>
+
+    <!-- Swal for alerts (Optional: Keep if planning to use later) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Dexie for historical data (Optional: Keep if planning to use later) -->
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -26,11 +26,12 @@
      <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
     <script>
+        // Tailwind Configuration (within <script> tag)
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: 'class', // Enable dark mode based on class
             theme: {
                 extend: {
-                    colors: {
+                    colors: { // Extend default colors with a primary color theme
                         primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
                     }
                 }
@@ -38,24 +39,34 @@
         }
     </script>
     <style>
-        ::-webkit-scrollbar { width: 8px; height: 8px;}
-        ::-webkit-scrollbar-track { background: #2d3748; }
-        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px;}
-        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        /* CSS Styles (within <style> tag) */
 
+        /* Basic Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px;}
+        ::-webkit-scrollbar-track { background: #2d3748; } /* dark:bg-gray-800 adjusted */
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px;} /* dark:bg-gray-600 adjusted */
+        ::-webkit-scrollbar-thumb:hover { background: #718096; } /* dark:bg-gray-500 adjusted */
+        html.light ::-webkit-scrollbar-track { background: #f1f5f9; } /* bg-slate-100 */
+        html.light ::-webkit-scrollbar-thumb { background: #cbd5e1; } /* bg-slate-300 */
+        html.light ::-webkit-scrollbar-thumb:hover { background: #94a3b8; } /* bg-slate-400 */
+
+
+        /* Chart Fade-in */
         .chart-container { opacity: 0; transition: opacity 0.5s ease-in-out; }
         .chart-container.loaded { opacity: 1; }
 
+        /* Blinking Animation */
         .blink { animation: blink-animation 1s steps(2, start) infinite; }
         @keyframes blink-animation { to { visibility: hidden; } }
 
         /* Ensure map has height */
-        #map { height: 400px; z-index: 0; border-radius: 0.75rem; /* rounded-lg */} 
-        
+        #map { height: 400px; z-index: 0; border-radius: 0.75rem; /* rounded-lg */}
+
         /* Style Leaflet Routing Machine for dark mode */
         .dark .leaflet-routing-container {
             background-color: #374151; /* gray-700 */
             color: #e5e7eb; /* gray-200 */
+            border: 1px solid #4b5568; /* gray-600 */
         }
         .dark .leaflet-routing-alt h2, .dark .leaflet-routing-alt h3 {
              color: #e5e7eb; /* gray-200 */
@@ -63,6 +74,10 @@
          .dark .leaflet-routing-alt {
             background-color: #4b5568; /* gray-600 */
             border-color: #6b7280; /* gray-500 */
+            color: #e5e7eb; /* gray-200 */
+         }
+         .dark .leaflet-routing-alt:hover {
+            background-color: #535f73; /* Slightly lighter gray on hover */
          }
         .dark .leaflet-routing-instruction {
             color: #d1d5db; /* gray-300 */
@@ -70,37 +85,77 @@
          .dark .leaflet-routing-summary {
              color: #d1d5db; /* gray-300 */
          }
-         .dark .leaflet-routing-container input {
+         .dark .leaflet-routing-container input { /* Inputs within routing control (if any) */
              background-color: #4b5568; /* gray-600 */
              color: #e5e7eb; /* gray-200 */
              border: 1px solid #6b7280; /* gray-500 */
          }
-         .dark .leaflet-routing-icon {
+         .dark .leaflet-routing-icon { /* Icons within routing control */
              background-color: #4b5568; /* gray-600 */
              border-radius: 4px;
          }
-         /* Hide default waypoint inputs if using custom ones */
+         /* Hide default waypoint inputs if using custom ones (as we are) */
          .leaflet-routing-geocoders { display: none; }
+         /* Ensure Routing Machine plan (instructions) scrolls if needed */
+         .leaflet-routing-container .leaflet-routing-alternatives-container {
+            max-height: 300px; /* Adjust as needed */
+            overflow-y: auto;
+         }
 
+         /* Style for the custom user location marker */
+        .user-location-icon {
+            color: #dc2626; /* red-600 */
+            font-size: 1.75rem; /* text-2xl */
+            text-align: center;
+            line-height: 1;
+            /* Optional: add a slight drop shadow for visibility */
+            /* text-shadow: 0 1px 3px rgba(0,0,0,0.4); */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            /* Increase chart height slightly on smaller screens */
+            .chart-container {
+                 height: 250px;
+            }
+            .h-72 { /* Targets elements specifically set to h-72 */
+                 height: 250px; /* Override default h-72 on smaller screens */
+            }
+            #map {
+                height: 350px; /* Slightly smaller map on mobile */
+            }
+            #aqiGaugeChart {
+                 max-w: 180px; /* Slightly smaller gauge */
+                 max-h: 130px;
+            }
+            #powerSourceChart {
+                 max-h: 220px; /* Reduce pie chart max height */
+            }
+            /* Adjust grid cols for stats - force 2 columns */
+            section.grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+             /* Reduce container padding on small screens */
+            .container { padding: 1rem; } /* p-4 */
+
+             /* Reduce font size for route results */
+            #route-results p {
+                font-size: 0.9rem;
+            }
+             /* Ensure route planner inputs stack nicely */
+            section > div.grid.grid-cols-1.md\:grid-cols-3 {
+                grid-template-columns: repeat(1, minmax(0, 1fr)); /* Force single column */
+            }
+            section > div.grid.grid-cols-1.md\:grid-cols-3 > div {
+                 margin-bottom: 0.5rem; /* Add some space between stacked inputs */
+            }
+             section > div.grid.grid-cols-1.md\:grid-cols-3 > div:last-child {
+                  margin-bottom: 0; /* No margin below the button */
+             }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-
-    @media (max-width: 768px) {
-        .chart-container {
-            width: 100%;
-            padding: 5px;
-        }
-        
-        .map-marker {
-            transform: scale(1.5);
-        }
-        
-        .route-stat {
-            font-size: 0.9em;
-        }
-    }
-    
 
     <div class="container mx-auto p-4 md:p-6 lg:p-8">
 
@@ -109,16 +164,17 @@
                 <i class="fas fa-city mr-2"></i>Smart City Dashboard
             </h1>
             <div>
-                <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" aria-label="Toggle theme">
                     <i class="fas fa-sun" id="theme-icon-sun"></i>
                     <i class="fas fa-moon hidden" id="theme-icon-moon"></i>
                 </button>
             </div>
         </header>
 
-        <div id="notification-bar" class="hidden mb-4 p-3 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 rounded-lg shadow-md">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
-            <span id="notification-message">High AQI levels detected in Downtown!</span>
+        <!-- Notification Bar -->
+        <div id="notification-bar" class="hidden mb-4 p-3 border rounded-lg shadow-md" role="alert">
+            <i class="fas fa-info-circle mr-2"></i> <!-- Icon will be updated by JS -->
+            <span id="notification-message">Notification text goes here.</span>
         </div>
 
         <!-- City Wide Stats -->
@@ -126,7 +182,7 @@
             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Vehicles Today</h3>
                 <p class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="total-vehicles">--</p>
-                <p class="text-xs text-green-600 dark:text-green-400 mt-1">+5% vs yesterday</p>
+                <p class="text-xs mt-1" id="vehicles-comparison">+0% vs yesterday</p> <!-- Dynamic content -->
             </div>
              <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current AQI Level</h3>
@@ -136,12 +192,12 @@
              <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Energy Consumption Today</h3>
                 <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400" id="energy-today">-- <span class="text-lg">kWh</span></p>
-                 <p class="text-xs text-red-600 dark:text-red-400 mt-1">-2% vs yesterday</p>
+                 <p class="text-xs mt-1" id="energy-comparison">-0% vs yesterday</p> <!-- Dynamic content -->
             </div>
              <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Traffic Congestion</h3>
                  <p class="text-3xl font-bold flex items-center" id="traffic-congestion-status">
-                    <span class="w-4 h-4 rounded-full bg-gray-400 mr-2" id="traffic-light"></span>
+                    <span class="w-4 h-4 rounded-full bg-gray-400 mr-2 inline-block" id="traffic-light"></span> <!-- Added inline-block -->
                     <span id="traffic-text">--</span>
                  </p>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">City Average</p>
@@ -155,7 +211,7 @@
                 <div class="relative">
                     <label for="start-location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Location</label>
                     <input type="text" id="start-location" placeholder="Enter address or use current location" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
-                    <button id="use-location-btn" title="Use Current Location" class="absolute right-2 bottom-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400">
+                    <button id="use-location-btn" title="Use Current Location" class="absolute right-2 bottom-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400" aria-label="Use current location">
                         <i class="fas fa-location-crosshairs"></i>
                     </button>
                 </div>
@@ -164,55 +220,59 @@
                     <input type="text" id="destination-location" placeholder="Enter destination address" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
                 </div>
                 <div>
-                     <button id="find-route-btn" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out">
+                     <button id="find-route-btn" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-route mr-2"></i>Find Route & Estimate
                     </button>
                 </div>
             </div>
-            <div id="map" class="mb-4"></div>
+            <!-- Map Container -->
+            <div id="map" class="mb-4" aria-label="Map displaying route"></div>
+            <!-- Route Results Container -->
             <div id="route-results" class="hidden p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
                  <h3 class="text-lg font-semibold mb-2">Route Estimation Results:</h3>
                  <p id="route-summary"></p>
                  <p id="route-aqi"></p>
                  <p id="route-traffic"></p>
-                 <p id="route-error" class="text-red-600 dark:text-red-400"></p>
+                 <p id="route-error" class="text-red-600 dark:text-red-400 font-semibold"></p>
             </div>
         </section>
-
 
         <!-- Charts Section -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
             <!-- Pollution Trends -->
             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72">
                 <h3 class="text-lg font-semibold mb-3">Pollution Trends (Last Hour)</h3>
-                <canvas id="pollutionChart"></canvas>
+                <canvas id="pollutionChart" role="img" aria-label="Line chart showing pollution trends"></canvas>
             </div>
 
             <!-- Energy Consumption by District -->
             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72">
                  <h3 class="text-lg font-semibold mb-3">Energy Consumption by District (kWh)</h3>
-                 <canvas id="energyDistrictChart"></canvas>
+                 <canvas id="energyDistrictChart" role="img" aria-label="Bar chart showing energy consumption by district"></canvas>
              </div>
 
+             <!-- Combined AQI Gauge and Power Source Grid -->
              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:col-span-2">
-                 <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container flex flex-col items-center justify-center relative">
+                 <!-- AQI Gauge -->
+                 <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container flex flex-col items-center justify-center relative h-72 md:h-auto"> <!-- Adjusted height -->
                     <h3 class="text-lg font-semibold mb-3 absolute top-4 left-4">Live AQI</h3>
-                    <canvas id="aqiGaugeChart" class="max-w-[200px] max-h-[150px]"></canvas>
+                    <canvas id="aqiGaugeChart" class="max-w-[200px] max-h-[150px]" role="img" aria-label="Gauge showing current Air Quality Index"></canvas>
                      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-10px] text-center pointer-events-none">
                         <span id="aqiGaugeValue" class="text-3xl font-bold">--</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400">AQI</span>
                      </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container">
-                    <h3 class="text-lg font-semibold mb-3">Power Source Mix</h3>
-                    <canvas id="powerSourceChart" class="max-h-[250px]"></canvas>
+                <!-- Power Source Mix -->
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72 md:h-auto"> <!-- Adjusted height -->
+                    <h3 class="text-lg font-semibold mb-3">Power Source Mix (%)</h3>
+                    <canvas id="powerSourceChart" class="max-h-[250px]" role="img" aria-label="Pie chart showing power source mix"></canvas>
                 </div>
             </div>
         </section>
 
-
+        <!-- Footer -->
         <footer class="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
-            | Smart City Dashboard | Route data © OpenStreetMap contributors |
+            | Smart City Dashboard | Route data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-primary-400 hover:underline">OpenStreetMap</a> contributors |
         </footer>
     </div>
 
@@ -223,17 +283,8 @@
     <!-- Leaflet Routing Machine JS -->
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+    <!-- Your Custom JavaScript -->
     <script src="script.js"></script>
-
-    <!-- Add to your HTML -->
-<div id="summary-container" class="summary-dashboard"></div>
-<div id="route-alternatives" class="route-alternatives"></div>
-<canvas id="historicalChart"></canvas>
-
-<form id="alert-settings">
-    <input type="number" id="aqi-threshold" placeholder="Set AQI Alert (default 100)">
-    <button type="submit">Save Alert</button>
-</form>
 
 </body>
 </html>
