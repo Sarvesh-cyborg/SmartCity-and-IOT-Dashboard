@@ -1,0 +1,133 @@
+/* CSS Styles */
+
+/* Prevent horizontal scroll */
+body {
+    overflow-x: hidden;
+}
+
+/* Basic Scrollbar Styling */
+::-webkit-scrollbar { width: 8px; height: 8px;}
+::-webkit-scrollbar-track { background: #2d3748; } /* dark:bg-gray-800 adjusted */
+::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px;} /* dark:bg-gray-600 adjusted */
+::-webkit-scrollbar-thumb:hover { background: #718096; } /* dark:bg-gray-500 adjusted */
+html.light ::-webkit-scrollbar-track { background: #f1f5f9; } /* bg-slate-100 */
+html.light ::-webkit-scrollbar-thumb { background: #cbd5e1; } /* bg-slate-300 */
+html.light ::-webkit-scrollbar-thumb:hover { background: #94a3b8; } /* bg-slate-400 */
+
+/* Title specific colors */
+#city-name { color: #3b82f6; } /* Tailwind's primary-500 (Blue) */
+.dark #city-name { color: #60a5fa; } /* Tailwind's primary-400 (Lighter Blue) */
+#lytics-name { color: #dc2626; } /* Tailwind's red-600 */
+.dark #lytics-name { color: #f87171; } /* Tailwind's red-400 */
+#s-char { color: #ca8a04; } /* Tailwind's yellow-600 (Dark Yellow) */
+.dark #s-char { color: #facc15; } /* Tailwind's yellow-400 */
+
+/* Chart Fade-in */
+.chart-container { opacity: 0; transition: opacity 0.5s ease-in-out; }
+.chart-container.loaded { opacity: 1; }
+
+/* Blinking Animation */
+.blink { animation: blink-animation 1s steps(2, start) infinite; }
+@keyframes blink-animation { to { visibility: hidden; } }
+
+/* Ensure map has height */
+/* Height is also set inline in HTML for clarity, but can be here */
+#map { /* height: 400px; */ z-index: 0; /* border-radius: 0.75rem; /* rounded-lg */}
+
+/* Style Leaflet Routing Machine for dark mode */
+.dark .leaflet-routing-container {
+    background-color: #374151; /* gray-700 */
+    color: #e5e7eb; /* gray-200 */
+    border: 1px solid #4b5568; /* gray-600 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.dark .leaflet-routing-alt h2, .dark .leaflet-routing-alt h3 {
+     color: #e5e7eb; /* gray-200 */
+}
+ .dark .leaflet-routing-alt {
+    background-color: #4b5568; /* gray-600 */
+    border-color: #6b7280; /* gray-500 */
+    color: #e5e7eb; /* gray-200 */
+    border-radius: 4px;
+    margin-bottom: 5px;
+ }
+ .dark .leaflet-routing-alt:hover {
+    background-color: #535f73; /* Slightly lighter gray on hover */
+ }
+.dark .leaflet-routing-instruction {
+    color: #d1d5db; /* gray-300 */
+}
+ .dark .leaflet-routing-summary {
+     color: #d1d5db; /* gray-300 */
+ }
+ .dark .leaflet-routing-container input {
+     background-color: #4b5568; /* gray-600 */
+     color: #e5e7eb; /* gray-200 */
+     border: 1px solid #6b7280; /* gray-500 */
+ }
+ .dark .leaflet-routing-icon {
+     background-color: #4b5568; /* gray-600 */
+     border-radius: 4px;
+ }
+ /* Hide the default geocoder inputs within routing machine */
+ .leaflet-routing-geocoders { display: none; }
+
+ .leaflet-routing-container .leaflet-routing-alternatives-container {
+    max-height: 300px; /* Limit height of alternatives */
+    overflow-y: auto; /* Add scroll if needed */
+    padding-right: 5px; /* Space for scrollbar */
+ }
+
+ /* Style for the custom user location marker */
+.user-location-icon {
+    color: #dc2626; /* red-600 */
+    font-size: 1.75rem; /* text-2xl */
+    text-align: center;
+    line-height: 1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    /* Adjust chart/map heights */
+    .chart-container { height: 250px; }
+    .h-72 { height: 250px !important; } /* Use important if needed to override */
+    #map { height: 350px !important; }
+    #aqiGaugeChart { max-width: 180px; max-height: 130px; }
+    #powerSourceChart { max-height: 220px; }
+
+    /* Rely on Tailwind classes for stats grid */
+
+     /* Reduce container padding */
+    .container { padding: 1rem; } /* p-4 */
+
+     /* Reduce font size for route results */
+    #route-results p { font-size: 0.9rem; }
+
+     /* Stack route planner inputs */
+    section > div.grid.grid-cols-1.md\:grid-cols-3 {
+        grid-template-columns: repeat(1, minmax(0, 1fr)); /* Force single column */
+    }
+    section > div.grid.grid-cols-1.md\:grid-cols-3 > div {
+         margin-bottom: 0.75rem; /* Add space between stacked inputs */
+    }
+     section > div.grid.grid-cols-1.md\:grid-cols-3 > div:last-child {
+          margin-bottom: 0; /* No margin below the button */
+     }
+
+    /* Adjust header layout on small screens */
+    header {
+        flex-direction: column;
+        align-items: flex-start; /* Align items to start */
+    }
+     header > h1 {
+         margin-bottom: 0.75rem; /* Add space below title */
+     }
+    header > div.flex { /* Target the container for input/button */
+        width: 100%; /* Make it full width */
+        justify-content: space-between; /* Space out input/theme toggle */
+    }
+    header > div.flex > div.relative { /* Target the input container */
+        flex-grow: 1; /* Allow input to take more space */
+        margin-right: 0.5rem; /* Add space between input and theme toggle */
+    }
+}

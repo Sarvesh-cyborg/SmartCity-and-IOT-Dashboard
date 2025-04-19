@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityLytics - Smart City Analytics</title>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Included but not actively used in this script version -->
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script> <!-- Included but not actively used in this script version -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        // Tailwind Configuration
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 overflow-x-hidden">
+
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+
+        <header class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl md:text-3xl font-bold">
+                <i class="fas fa-chart-line mr-1"></i><span id="city-name">City</span><span id="lytics-name">Lytic</span><span id="s-char">s</span>
+                <span id="current-city-display" class="text-lg font-normal text-gray-600 dark:text-gray-400 ml-2"></span>
+            </h1>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-grow sm:flex-grow-0">
+                    <input type="text" id="city-input" placeholder="Enter city name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                    <button id="update-city-btn" title="Update City" class="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400" aria-label="Update city">
+                         <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <button id="theme-toggle" class="flex-shrink-0 p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" aria-label="Toggle theme">
+                    <i class="fas fa-sun" id="theme-icon-sun"></i>
+                    <i class="fas fa-moon hidden" id="theme-icon-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div id="notification-bar" class="hidden mb-4 p-3 border rounded-lg shadow-md" role="alert" aria-live="polite"> 
+            <i class="fas fa-info-circle mr-2"></i>
+            <span id="notification-message">Notification text goes here.</span>
+        </div>
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Vehicles Today <span class="text-xs italic">(Simulated)</span></h3>
+                <p class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="total-vehicles">--</p>
+                <p class="text-xs mt-1" id="vehicles-comparison">+0% vs yesterday</p>
+            </div>
+             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current AQI</h3>
+                <p class="text-3xl font-bold" id="current-aqi">--</p>
+                <p class="text-xs mt-1" id="aqi-status">Status: Loading...</p>
+            </div>
+             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Energy Use Today <span class="text-xs italic">(Simulated)</span></h3>
+                <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400" id="energy-today">-- <span class="text-lg">kWh</span></p>
+                 <p class="text-xs mt-1" id="energy-comparison">-0% vs yesterday</p>
+            </div>
+             <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Weather/Traffic Proxy</h3>
+                 <p class="text-3xl font-bold flex items-center" id="traffic-congestion-status">
+                    <i id="weather-icon" class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> 
+                    <span id="weather-text">--</span>
+                 </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="weather-desc">City Conditions</p>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg mb-6">
+             <h2 class="text-xl font-semibold mb-4">Route Planner & Estimation</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+                 <div class="relative">
+                    <label for="start-location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Location</label>
+                    <input type="text" id="start-location" placeholder="Enter address or use current location" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                    <button id="use-location-btn" title="Use Current Location" class="absolute right-2 bottom-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400" aria-label="Use current location">
+                        <i class="fas fa-location-crosshairs"></i>
+                    </button>
+                </div>
+                <div>
+                    <label for="destination-location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destination</label>
+                    <input type="text" id="destination-location" placeholder="Enter destination address" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+                <div>
+                     <button id="find-route-btn" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-route mr-2"></i>Find Route & Estimate
+                    </button>
+                </div>
+            </div>
+            <div id="map" class="mb-4 h-[400px] z-0 rounded-lg" aria-label="Map displaying route"></div> 
+            <div id="route-results" class="hidden p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
+                 <h3 class="text-lg font-semibold mb-2">Route Estimation Results:</h3>
+                 <p id="route-summary"></p>
+                 <p id="route-aqi"></p>
+                 <p id="route-error" class="text-red-600 dark:text-red-400 font-semibold"></p>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+     
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72">
+                <h3 class="text-lg font-semibold mb-3">Pollution Trends (PM2.5, CO)</h3>
+                <canvas id="pollutionChart" role="img" aria-label="Line chart showing pollution trends"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72">
+                 <h3 class="text-lg font-semibold mb-3">Energy Use by District <span class="text-xs italic">(Simulated)</span></h3>
+                 <canvas id="energyDistrictChart" role="img" aria-label="Bar chart showing energy consumption by district"></canvas>
+             </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:col-span-2">
+                 <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container flex flex-col items-center justify-center relative h-72 md:h-auto">
+                    <h3 class="text-lg font-semibold mb-3 absolute top-4 left-4">Live AQI</h3>
+                    <canvas id="aqiGaugeChart" class="max-w-[200px] max-h-[150px]" role="img" aria-label="Gauge showing current Air Quality Index"></canvas>
+                     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[-10px] text-center pointer-events-none">
+                        <span id="aqiGaugeValue" class="text-3xl font-bold">--</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400">AQI</span>
+                     </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg chart-container h-72 md:h-auto">
+                    <h3 class="text-lg font-semibold mb-3">Power Source Mix <span class="text-xs italic">(Simulated)</span> (%)</h3>
+                    <canvas id="powerSourceChart" class="max-h-[250px]" role="img" aria-label="Pie chart showing power source mix"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
+             | CityLytics | Route data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-primary-400 hover:underline">OpenStreetMap</a> contributors | Weather & AQI data from <a href="https://openweathermap.org/" target="_blank" rel="noopener noreferrer" class="text-primary-600 dark:text-primary-400 hover:underline">OpenWeatherMap</a> |
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
