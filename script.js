@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- START: API Key Configuration ---
-    const OPENWEATHER_API_KEY = 'b76b90a74a663c1c32df578f3d993b72'; 
+    const OPENWEATHER_API_KEY = 'API Key here'; 
 
     console.log("CityLytics Dashboard Initializing...");
 
